@@ -20,7 +20,7 @@ const metadata = {
     icons: ['https://assets.reown.com/reown-profile-pic.png']
 };
 
-const modal = createAppKit({
+export const modal = createAppKit({
     adapters: [wagmiAdapter],
     projectId,
     networks: [mainnet, arbitrum, sepolia],
@@ -40,7 +40,9 @@ function ContextProvider({ children, cookies }: { children: ReactNode; cookies: 
   
     return (
       <WagmiProvider config={wagmiAdapter.wagmiConfig as Config} initialState={initialState}>
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
       </WagmiProvider>
     )
   }

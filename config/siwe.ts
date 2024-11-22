@@ -1,13 +1,13 @@
 import { getCsrfToken, signIn, signOut, getSession } from 'next-auth/react'
 import type { SIWEVerifyMessageArgs, SIWECreateMessageArgs, SIWESession } from '@reown/appkit-siwe'
 import { createSIWEConfig, formatMessage } from '@reown/appkit-siwe'
-import { mainnet, sepolia } from '@reown/appkit/networks'
+import { mainnet, sepolia, arbitrum } from '@reown/appkit/networks'
 
 export const siweConfig = createSIWEConfig({
   getMessageParams: async () => ({
     domain: typeof window !== 'undefined' ? window.location.host : '',
     uri: typeof window !== 'undefined' ? window.location.origin : '',
-    chains: [mainnet.id, sepolia.id],
+    chains: [mainnet.id, sepolia.id, arbitrum.id],
     statement: 'Please sign with your account'
   }),
   createMessage: ({ address, ...args }: SIWECreateMessageArgs) => formatMessage(args, address),
