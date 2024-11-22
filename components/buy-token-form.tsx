@@ -2,6 +2,8 @@
 
 import React from 'react'
 
+import { useAccount } from 'wagmi'
+
 
 const BuyTokenForm = () => {
   // states
@@ -10,6 +12,9 @@ const BuyTokenForm = () => {
   const [error, setError] = React.useState<string|null>(null);
   const [isPending, setIsPending] = React.useState<boolean>(false);
   const [inputValue, setInputValue] = React.useState<number | "">(0.3)
+
+  // wagmi
+  const {isConnected} = useAccount();
 
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,10 +47,10 @@ const BuyTokenForm = () => {
 
       <button
         disabled={isPending} 
-        type={true ? 'submit' : "button"} 
+        type={isConnected ? 'submit' : "button"} 
         className={`text-white bg-[var(--secondary)] p-[.5rem] flex justify-center items-center rounded-[.375rem] w-full text-[16px] ${isPending && "opacity-50"}`}
       >
-        {true ? "Connect Wallet" : isPending ? "Confirming..." : "Send"}
+        {!isConnected ? "Connect Wallet" : isPending ? "Confirming..." : "Send"}
       </button>
 
       {error && (

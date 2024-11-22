@@ -1,8 +1,9 @@
-"use server"
+'use client';
 
+// components
 import BuyTokenForm from "@/components/buy-token-form";
 
-export default async function Home() {
+export default function Home() {
   return (
     <section className="flex flex-col items-center p-[16px] mt-[32px]">
       <h1 className="lg:text-[72px] text-[36px] text-center font-[700] leading-[2.5rem] lg:leading-none">
@@ -27,7 +28,6 @@ export default async function Home() {
           All amounts below 0.05 and above 1 ETH will be refunded.
         </p>
       </div>
-      
     </section>
   );
 }
