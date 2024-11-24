@@ -4,7 +4,7 @@ import React from 'react'
 const W3mButton = () => {
   return (
     <div>
-        <w3m-button/>
+        {React.createElement('w3m-button')}
     </div>
   )
 }

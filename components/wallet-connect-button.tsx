@@ -19,7 +19,7 @@ const WalletConnectButton = () => {
 
   return( 
     <div>
-      {!isConnected ? <W3mButton/> : <w3m-account-button/>}
+      {!isConnected ? <W3mButton/> : React.createElement('w3m-account-button')}
     </div> 
   );
 }

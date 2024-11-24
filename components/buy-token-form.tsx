@@ -51,7 +51,7 @@ const BuyTokenForm = ({min, max}:{min:number, max:number}) => {
   //& handle purchase
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if(!address) return modal.open();
+    if(!walletIsConnected) return modal.open();
     try {
       setError(null)
       setSuccess(null)
@@ -65,7 +65,7 @@ const BuyTokenForm = ({min, max}:{min:number, max:number}) => {
       const data:SendTransactionReturnType = await sendTransactionAsync({
         chainId: sepolia.id,
         account: address,
-        to: "0xd279ed8a83fa611fAc1401814927f118F80FEB5E",
+        to: "0xb5DAD09F19E55ae8d8d7a052b7447775d9062201",
         value: parseEther(inputValue.toString()),
         gas,
       },
@@ -141,7 +141,8 @@ const BuyTokenForm = ({min, max}:{min:number, max:number}) => {
 
       <button
         disabled={isPending || !!transactionConfirming} 
-        type={walletIsConnected ? "submit" : "submit"} 
+        type={walletIsConnected ? "submit" : "button"} 
+        onClick={()=>{!walletIsConnected && modal.open()}}
         className={`relative text-white bg-[var(--secondary)] p-[.5rem] flex justify-center items-center rounded-[.375rem] w-full text-[16px] ${(isPending || !!transactionConfirming) && "opacity-50"}`}
       >
         {!walletIsConnected ? "Connect Wallet" : isPending ? "Confirming..." : "Send"}
