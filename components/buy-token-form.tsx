@@ -1,38 +1,52 @@
 "use client"
 
-import React from 'react'
+import React, { Suspense } from 'react'
+import Image from 'next/image';
 
 // wagmi
-import { useAccount, useWriteContract } from 'wagmi'
+import { useAccount, useSendTransaction } from 'wagmi'
+import { estimateGas } from 'wagmi/actions';
 import { sepolia } from 'viem/chains';
+import { SendTransactionErrorType } from 'wagmi/actions';
+import { SendTransactionReturnType } from 'wagmi/actions';
 
-// constants
-import {abi} from '../constants/abi';
+// hooks & api
+import axios from 'axios';
+import { useExtractError } from '@/hooks/useExtractError';
 
 // appkit 
 import { modal } from '@/context';
+import { parseEther } from 'viem';
+import { config } from '@/config';
+
+// constants
+import { api_key } from '@/constants/eatherscan-api-key';
 
 
-
-
-const BuyTokenForm = () => {
+const BuyTokenForm = ({min, max}:{min:number, max:number}) => {
   // states
-  const [max, setMax] = React.useState<number>(1)
-  const [min, setMin] = React.useState<number>(0.05)
   const [error, setError] = React.useState<string|null>(null);
   const [success, setSuccess] = React.useState<string|null>(null);
   const [isPending, setIsPending] = React.useState<boolean>(false);
   const [inputValue, setInputValue] = React.useState<number | "">(0.3)
+  const [transactionLink, setTransactionLink] = React.useState<string>("");
+  const [transactionConfirming, setTransactionConfirming] = React.useState<"Conforming..." | "">("");
+  const [walletIsConnected, setWalletIsConnected] = React.useState<boolean>()
 
+  
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if(!e.target.value) return setInputValue("");
     setInputValue(Number(e.target.value))
   }
-
-  // wagmi
-  const {isConnected, address} = useAccount();
-  const {writeContractAsync} = useWriteContract();
   
+  // wagmi
+  const {address} = useAccount();
+  const {sendTransactionAsync} = useSendTransaction();
+
+  React.useEffect(()=>{
+    if(address) return setWalletIsConnected(true);
+    setWalletIsConnected(false)
+  }, [walletIsConnected, address])
 
   //& handle purchase
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,24 +56,62 @@ const BuyTokenForm = () => {
       setError(null)
       setSuccess(null)
       setIsPending(true)
+      setTransactionConfirming("");
 
-      const data = await writeContractAsync({
+      // estimate Gas
+      const gas = await estimateGas(config, {});
+
+      // transaction
+      const data:SendTransactionReturnType = await sendTransactionAsync({
         chainId: sepolia.id,
-        address: "0xd279ed8a83fa611fAc1401814927f118F80FEB5E",
-        functionName: "buyPresale",
-        abi,
-        args: [
-          BigInt(Number(inputValue)*(10**18)),
-        ],
+        account: address,
+        to: "0xd279ed8a83fa611fAc1401814927f118F80FEB5E",
+        value: parseEther(inputValue.toString()),
+        gas,
+      },
+      {
+        onError: async (ERROR: SendTransactionErrorType)=>{
+          setError(useExtractError(ERROR.stack!)); 
+        },
       })
-      console.log(data);
+      
+      // set transaction link for btn
+      await setTransactionLink(data)
+
+      setTransactionConfirming("Conforming...");
+
+      // get transaction status
+      const getTransactionStatus = async () =>{    
+        try {
+          const response = await axios.get(
+            `https://api-sepolia.etherscan.io/api?module=transaction&action=getstatus&txhash=${data}&apikey=${api_key}`
+          );
+
+          const resultMessage = response.data.message;
+    
+          if (resultMessage === "NOTOK") {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return getTransactionStatus();
+          } else if (resultMessage === "OK") {
+            await new Promise(resolve => setTimeout(resolve, 30000));
+            await axios.get(
+              `https://api-sepolia.etherscan.io/api?module=transaction&action=getstatus&txhash=${data}&apikey=${api_key}`
+            ).then((data)=>{
+              if(data.data.result.isError == "0"){setTransactionConfirming(""); setSuccess("Confirmed"); setError(null); setIsPending(false)}
+              if(data.data.result.isError == "1"){setTransactionConfirming(""); setSuccess(null); setError("Failed."); setIsPending(false)}
+            })
+          }
+        } catch (error) {
+          console.error("Error:", error);
+        }
+      }; 
+      getTransactionStatus();
+      
+
       setIsPending(false)
       setError(null)
-      setSuccess("Successfully")
-    } catch (error) {
+    } catch{} finally{
       setIsPending(false)
-      setSuccess(null)
-      setError("Something went wrong")
     }
   }
 
@@ -88,12 +140,19 @@ const BuyTokenForm = () => {
       />
 
       <button
-        disabled={isPending} 
-        type={isConnected ? "submit" : "submit"} 
-        className={`relative text-white bg-[var(--secondary)] p-[.5rem] flex justify-center items-center rounded-[.375rem] w-full text-[16px] ${isPending && "opacity-50"}`}
+        disabled={isPending || !!transactionConfirming} 
+        type={walletIsConnected ? "submit" : "submit"} 
+        className={`relative text-white bg-[var(--secondary)] p-[.5rem] flex justify-center items-center rounded-[.375rem] w-full text-[16px] ${(isPending || !!transactionConfirming) && "opacity-50"}`}
       >
-        {!isConnected ? "Connect Wallet" : isPending ? "Confirming..." : "Send"}
+        {!walletIsConnected ? "Connect Wallet" : isPending ? "Confirming..." : "Send"}
       </button>
+
+      {error == "Failed." && (
+        <a href={`https://sepolia.etherscan.io/tx/${transactionLink}`} target='_blank' className='flex justify-center items-center p-2 text-[16px] gap-[.5rem] text-[#3B82F6] underline'>
+          <Image src={'/etherscan-logo-circle.svg'} alt='logo' width={50} height={50}/>
+          View on Etherscan
+        </a>
+      )}
 
       {error && (
         <span className='text-center py-[8px] text-[16px] text-[#Dc2626]'>
@@ -101,7 +160,18 @@ const BuyTokenForm = () => {
         </span>
       )}
       {success && (
-        <span className='text-center py-[8px] text-[16px] text-emerald-500'>
+        <a href={`https://sepolia.etherscan.io/tx/${transactionLink}`} target='_blank' className='flex justify-center items-center p-2 text-[16px] gap-[.5rem] text-[#3B82F6] underline'>
+          <Image src={'/etherscan-logo-circle.svg'} alt='logo' width={50} height={50}/>
+          View on Etherscan
+        </a>
+      )}
+      {transactionConfirming && (
+        <span className='text-center py-[8px] text-[13px] text-gray-800'>
+          {transactionConfirming}
+        </span>
+      )}
+      {success && (
+        <span className='text-center py-[8px] text-[20px] font-[700] text-[#16A34A]'>
           {success}
         </span>
       )}

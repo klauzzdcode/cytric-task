@@ -1,6 +1,7 @@
 import {cookieStorage, createStorage} from 'wagmi';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 import { mainnet, arbitrum, sepolia } from '@reown/appkit/networks';
+import { createPublicClient, http } from 'viem';
 
 export const projectId = process.env.NEXT_PUBLIC_PROJECT_ID;
 
