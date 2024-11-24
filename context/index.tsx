@@ -17,7 +17,7 @@ if(!projectId) throw new Error("Project ID is not defined.");
 const metadata = {
     name: "Cytric Task",
     description: "Cytric Task - Nextjs 13.5 used",
-    url: "https://exampleapp.com/",
+    url: "https://cytric-task.vercel.app/",
     icons: ['https://assets.reown.com/reown-profile-pic.png']
 };
 

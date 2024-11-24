@@ -23,35 +23,35 @@ export default function Home() {
   const {address} = useAccount();
 
   // get minPurchase 
-  // const getMinPurchase= async () => {
-  //   const minPurchase =  await readContract(config,{
-  //     chainId: sepolia.id,
-  //     abi,
-  //     address: "0xd279ed8a83fa611fAc1401814927f118F80FEB5E",
-  //     functionName: "minPurchase",
-  //     args: [],
+  const getMinPurchase= async () => {
+    const minPurchase =  await readContract(config,{
+      chainId: sepolia.id,
+      abi,
+      address: "0xd279ed8a83fa611fAc1401814927f118F80FEB5E",
+      functionName: "minPurchase",
+      args: [],
   
-  //   });
-  //   if(minPurchase) return setMin(Number(minPurchase)/10**18);
-  // }
+    });
+    if(minPurchase) return setMin(Number(minPurchase)/10**18);
+  }
 
-  // // get maxPurchase
-  // const getMaxPurchase= async () => {
-  //   const maxPurchase =  await readContract(config,{
-  //     chainId: sepolia.id,
-  //     account: address,
-  //     abi,
-  //     address: "0xd279ed8a83fa611fAc1401814927f118F80FEB5E",
-  //     functionName: "maxPurchase",
-  //     args: [],
-  //   })
-  //   if(maxPurchase) return setMax(Number(maxPurchase)/10**18);
-  // }
+  // get maxPurchase
+  const getMaxPurchase= async () => {
+    const maxPurchase =  await readContract(config,{
+      chainId: sepolia.id,
+      account: address,
+      abi,
+      address: "0xd279ed8a83fa611fAc1401814927f118F80FEB5E",
+      functionName: "maxPurchase",
+      args: [],
+    })
+    if(maxPurchase) return setMax(Number(maxPurchase)/10**18);
+  }
 
-  // React.useEffect(()=>{
-  //   getMinPurchase()
-  //   getMaxPurchase()
-  // }, []);
+  React.useEffect(()=>{
+    getMinPurchase()
+    getMaxPurchase()
+  }, []);
 
   return (
     <section className="flex flex-col items-center p-[16px] mt-[32px]">
