@@ -71,7 +71,7 @@ const BuyTokenForm = ({min, max}:{min:number, max:number}) => {
       },
       {
         onError: async (ERROR: SendTransactionErrorType)=>{
-          setError(useExtractError(ERROR.stack!)); 
+          setError(`Error: ${useExtractError(ERROR.stack!)}`); 
         },
       })
       
